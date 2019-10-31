@@ -1,0 +1,33 @@
+package org.deskconn.servicefinder;
+
+import java.util.Map;
+
+public class Service {
+    private String mHostname;
+    private String mHostIP;
+    private int mPort;
+    private Map<String, String> mProperties;
+
+    public Service(String hostName, String hostIP, int port, Map<String, String> properties) {
+        mHostname = hostName;
+        mHostIP = hostIP;
+        mPort = port;
+        mProperties = properties;
+    }
+
+    public String getHostName() {
+        return mHostname;
+    }
+
+    public String getHostIP() {
+        return mHostIP;
+    }
+
+    public int getPort() {
+        return mPort;
+    }
+
+    public String getProperty(String name) {
+        return mProperties.getOrDefault(name, null);
+    }
+}
