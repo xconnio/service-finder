@@ -1,6 +1,7 @@
 package org.deskconn.servicefinder;
 
 import android.content.Context;
+import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -33,12 +34,26 @@ public class ServiceFinder implements WiFi.StateListener, ServiceTypeListener, S
     private int mPendingType;
     private String mQueuedType;
     private ExecutorService mExecutor;
+    private WifiManager.MulticastLock mMulticastLock;
 
     public ServiceFinder(Context context) {
         mExecutor = Executors.newSingleThreadExecutor();
+        WifiManager manager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        mMulticastLock = manager.createMulticastLock(getClass().getName());
         mWiFi = new WiFi(context);
         mWiFi.addStateListener(this);
         mWiFi.trackState();
+    }
+
+    private void grabMulticastLock() {
+        mMulticastLock.setReferenceCounted(true);
+        mMulticastLock.acquire();
+    }
+
+    private void releaseMulticastLock() {
+        if (mMulticastLock.isHeld()) {
+            mMulticastLock.release();
+        }
     }
 
     public interface ServiceListener {
@@ -59,7 +74,7 @@ public class ServiceFinder implements WiFi.StateListener, ServiceTypeListener, S
             return;
         }
         if (mWiFi.hasIP()) {
-            this.discoverAll(mWiFi.getIP());
+            discoverAll(mWiFi.getIP());
         } else {
             mPendingType = PENDING_TYPE_ALL;
         }
@@ -68,9 +83,11 @@ public class ServiceFinder implements WiFi.StateListener, ServiceTypeListener, S
     private void discoverAll(String ip) {
         mExecutor.submit(() -> {
             try {
-                mDNS = JmDNS.create(InetAddress.getByName(ip));
+                grabMulticastLock();
+                mDNS = JmDNS.create(InetAddress.getByName(ip), getClass().getName());
                 mDNS.addServiceTypeListener(this);
             } catch (IOException e) {
+                releaseMulticastLock();
                 e.printStackTrace();
             }
         });
@@ -91,9 +108,11 @@ public class ServiceFinder implements WiFi.StateListener, ServiceTypeListener, S
     private void discover(String type, String ip) {
         mExecutor.submit(() -> {
             try {
-                mDNS = JmDNS.create(InetAddress.getByName(ip));
+                grabMulticastLock();
+                mDNS = JmDNS.create(InetAddress.getByName(ip), getClass().getName());
                 mDNS.addServiceListener(type, this);
             } catch (IOException e) {
+                releaseMulticastLock();
                 e.printStackTrace();
             }
         });
@@ -116,6 +135,7 @@ public class ServiceFinder implements WiFi.StateListener, ServiceTypeListener, S
             mDNS.removeServiceTypeListener(this);
             mDNS = null;
         }
+        releaseMulticastLock();
     }
 
     @Override
