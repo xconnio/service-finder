@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ServiceFinder</string>
+    <string name="dialog_message">Please, Connect to Wifi 1st.</string>
+    <string name="dialog_title">Warning</string>
 </resources>

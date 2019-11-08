@@ -1,0 +1,141 @@
+diff --git a/app/src/main/java/org/deskconn/servicefinder/MainActivity.java b/app/src/main/java/org/deskconn/servicefinder/MainActivity.java
+index 8490156..7e48f1b 100644
+--- a/app/src/main/java/org/deskconn/servicefinder/MainActivity.java
++++ b/app/src/main/java/org/deskconn/servicefinder/MainActivity.java
+@@ -1,19 +1,35 @@
+ package org.deskconn.servicefinder;
+ 
++import androidx.annotation.NonNull;
++import androidx.annotation.Nullable;
+ import androidx.appcompat.app.AppCompatActivity;
+ 
++import android.content.Context;
+ import android.os.Bundle;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++import android.widget.BaseAdapter;
++import android.widget.ListView;
++import android.widget.TextView;
+ import android.widget.Toast;
+ 
++import java.util.ArrayList;
++
+ 
+ public class MainActivity extends AppCompatActivity implements ServiceFinder.ServiceListener {
+ 
+     private ServiceFinder mFinder;
++    private ArrayList<DataModel> arrayList;
++    private MyAdapter adapter;
++    private ListView listView;
+ 
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+         setContentView(R.layout.activity_main);
++        listView = findViewById(R.id.listview);
++        arrayList = new ArrayList<>();
+         mFinder = new ServiceFinder(getApplicationContext());
+     }
+ 
+@@ -32,8 +48,14 @@ public class MainActivity extends AppCompatActivity implements ServiceFinder.Ser
+ 
+     @Override
+     public void onFound(String type, Service service) {
++        DataModel dataModel = new DataModel();
++        dataModel.setService(service.getHostName());
++        dataModel.setType(type);
++        arrayList.add(dataModel);
+         System.out.println("Found: " + type + ": " + service.getHostName());
+         Toast.makeText(this, service.getHostIP(), Toast.LENGTH_SHORT).show();
++        adapter = new MyAdapter(arrayList, getApplicationContext());
++        listView.setAdapter(adapter);
+     }
+ 
+     @Override
+@@ -41,4 +63,54 @@ public class MainActivity extends AppCompatActivity implements ServiceFinder.Ser
+         System.out.println("Lost: " + type + ": " + name);
+         Toast.makeText(this, name, Toast.LENGTH_SHORT).show();
+     }
++
++    private class MyAdapter extends BaseAdapter {
++
++        ArrayList<DataModel> arrayList;
++        Context context;
++        ViewHolder viewHolder;
++
++        public MyAdapter(ArrayList<DataModel> arrayList, Context context) {
++            this.arrayList = arrayList;
++            this.context = context;
++        }
++
++        @Override
++        public int getCount() {
++            return arrayList.size();
++        }
++
++        @Override
++        public Object getItem(int position) {
++            return null;
++        }
++
++        @Override
++        public long getItemId(int position) {
++            return 0;
++        }
++
++        @Override
++        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
++            if (convertView == null) {
++                convertView = getLayoutInflater().inflate(R.layout.list_delegate, parent, false);
++                viewHolder = new ViewHolder();
++                viewHolder.service = convertView.findViewById(R.id.title);
++                viewHolder.type = convertView.findViewById(R.id.subtitle);
++                convertView.setTag(viewHolder);
++            } else {
++                viewHolder = (ViewHolder) convertView.getTag();
++            }
++            DataModel dataModel = arrayList.get(position);
++            viewHolder.service.setText(dataModel.getService());
++            viewHolder.service.setText(dataModel.getType());
++            return convertView;
++
++        }
++
++        class ViewHolder {
++            TextView service;
++            TextView type;
++        }
++    }
+ }
+diff --git a/app/src/main/res/layout/activity_main.xml b/app/src/main/res/layout/activity_main.xml
+index 4fc2444..22b2860 100644
+--- a/app/src/main/res/layout/activity_main.xml
++++ b/app/src/main/res/layout/activity_main.xml
+@@ -1,18 +1,14 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
++<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:app="http://schemas.android.com/apk/res-auto"
+     xmlns:tools="http://schemas.android.com/tools"
+     android:layout_width="match_parent"
+     android:layout_height="match_parent"
+     tools:context=".MainActivity">
+ 
+-    <TextView
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:text="Hello World!"
+-        app:layout_constraintBottom_toBottomOf="parent"
+-        app:layout_constraintLeft_toLeftOf="parent"
+-        app:layout_constraintRight_toRightOf="parent"
+-        app:layout_constraintTop_toTopOf="parent" />
++    <ListView
++        android:id="@+id/listview"
++        android:layout_width="match_parent"
++        android:layout_height="match_parent"/>
+ 
+-</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
++</RelativeLayout>
+\ No newline at end of file
