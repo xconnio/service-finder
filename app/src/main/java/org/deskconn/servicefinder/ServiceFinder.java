@@ -62,6 +62,7 @@ public class ServiceFinder implements WiFi.StateListener, ServiceTypeListener, S
     }
 
     public void addServiceListener(ServiceListener listener) {
+        System.out.println(mListeners.size());
         mListeners.add(listener);
     }
 
@@ -105,6 +106,15 @@ public class ServiceFinder implements WiFi.StateListener, ServiceTypeListener, S
         }
     }
 
+    public void cleanup() {
+        if (mDNS != null) {
+            mTypes.forEach(service -> mDNS.removeServiceListener(service, ServiceFinder.this));
+            mDNS.removeServiceTypeListener(this);
+            mDNS = null;
+        }
+        releaseMulticastLock();
+    }
+
     private void discover(String type, String ip) {
         mExecutor.submit(() -> {
             try {
@@ -130,12 +140,7 @@ public class ServiceFinder implements WiFi.StateListener, ServiceTypeListener, S
 
     @Override
     public void onDisconnect() {
-        if (mDNS != null) {
-            mTypes.forEach(service -> mDNS.removeServiceListener(service, ServiceFinder.this));
-            mDNS.removeServiceTypeListener(this);
-            mDNS = null;
-        }
-        releaseMulticastLock();
+        cleanup();
     }
 
     @Override
