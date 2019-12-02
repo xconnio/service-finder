@@ -1,8 +1,9 @@
 package org.deskconn.servicefinder;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class Service {
+public class Service implements Serializable {
     private String mHostname;
     private String mHostIP;
     private int mPort;
