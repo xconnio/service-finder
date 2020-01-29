@@ -14,9 +14,7 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 
 
-public class ServiceAdapter extends ArrayAdapter<DataModel> {
-
-
+public class ServiceAdapter extends ArrayAdapter<Service> {
     private Activity mActivity;
     private ViewHolder viewHolder;
     private ArrayList<Service> dataModels;

@@ -16,7 +16,6 @@ import java.util.Map;
 public class TypeAdapter extends ArrayAdapter<String> {
 
     private Activity mActivity;
-    private ViewHolder viewHolder;
     private Map<String, ArrayList<Service>> dataModels;
 
     TypeAdapter(Activity mActivity, Map<String, ArrayList<Service>> dataModels) {
@@ -28,6 +27,7 @@ public class TypeAdapter extends ArrayAdapter<String> {
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        ViewHolder viewHolder;
         if (convertView == null) {
             convertView = mActivity.getLayoutInflater().inflate(R.layout.types_group, parent,
                     false);
@@ -42,9 +42,6 @@ public class TypeAdapter extends ArrayAdapter<String> {
         }
         viewHolder.totalTypes.setText("devices " + dataModels.get(getItem(position)).size());
         viewHolder.type.setText(getItem(position));
-
-//        Animation animation = AnimationUtils.loadAnimation(mActivity.getApplicationContext(), R.anim.fade_in);
-//        convertView.startAnimation(animation);
 
         convertView.setFocusable(false);
         return convertView;

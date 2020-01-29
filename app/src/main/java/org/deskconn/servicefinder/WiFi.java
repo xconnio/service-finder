@@ -7,6 +7,8 @@ import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 
@@ -20,9 +22,11 @@ public class WiFi {
     private ConnectivityManager mCManager;
     private boolean mTracking;
     private String mIP;
+    private Handler mHandler;
 
     public WiFi(Context context) {
         mCManager = context.getSystemService(ConnectivityManager.class);
+        mHandler = new Handler(Looper.getMainLooper());
     }
 
     public interface StateListener {
@@ -63,14 +67,14 @@ public class WiFi {
             public void onAvailable(@NonNull Network network) {
                 super.onAvailable(network);
                 mIP = getNetworkIP(network);
-                mListeners.forEach(listener -> listener.onConnect(mIP));
+                mListeners.forEach(listener -> mHandler.post(() -> listener.onConnect(mIP)));
             }
 
             @Override
             public void onLost(@NonNull Network network) {
                 super.onLost(network);
                 mIP = null;
-                mListeners.forEach(StateListener::onDisconnect);
+                mListeners.forEach(stateListener -> mHandler.post(stateListener::onDisconnect));
             }
         });
         mTracking = true;
@@ -82,6 +86,10 @@ public class WiFi {
 
     public String getIP() {
         return mIP;
+    }
+
+    public boolean isConnected() {
+        return hasIP();
     }
 
     public boolean isTracking() {

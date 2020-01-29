@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">ServiceFinder</string>
-    <string name="dialog_message">Please, Connect to Wifi 1st.</string>
-    <string name="dialog_title">Warning</string>
+    <string name="dialog_message">To use Service Finder you must have WiFi connected</string>
+    <string name="dialog_title">WiFi not connected</string>
     <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
 </resources>

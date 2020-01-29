@@ -1,12 +1,7 @@
 package org.deskconn.servicefinder;
 
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -27,42 +22,47 @@ public class MainActivity extends AppCompatActivity implements ServiceFinder.Ser
 
     private ServiceFinder mFinder;
     private WiFi mWiFi;
-    private AlertDialog.Builder builder;
-    private AlertDialog dialog;
-    private ListView listView;
+    private AlertDialog mDialog;
+    private ListView mListView;
     private Map<String, ArrayList<Service>> listHashMap;
     private TypeAdapter myAdapter;
     private ProgressDialog progressDialog;
     private int selectedPosition = -1;
     private boolean foreground = false;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mWiFi = new WiFi(getApplicationContext());
-        builder = new AlertDialog.Builder(this);
-        builder.setMessage(R.string.dialog_message).setTitle(R.string.dialog_title);
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                System.exit(0);
-
-            }
-        });
-        dialog = builder.create();
-        listView = findViewById(R.id.listview);
-        listView.setOnItemClickListener(this);
+        mWiFi.addStateListener(this);
+        mWiFi.trackState();
+        mDialog = createDialog();
+        mListView = findViewById(R.id.listview);
+        mListView.setOnItemClickListener(this);
         listHashMap = new HashMap<>();
         myAdapter = new TypeAdapter(this, listHashMap);
-        listView.setAdapter(myAdapter);
+        mListView.setAdapter(myAdapter);
         progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Please wait.");
+        progressDialog.setMessage("Looking for services...");
+        mFinder = new ServiceFinder(getApplicationContext());
+        mFinder.addServiceListener(this);
+        mFinder.discoverAll();
+    }
+
+    private AlertDialog createDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.dialog_message).setTitle(R.string.dialog_title);
+        builder.setNegativeButton(R.string.ok, (dialog, id) -> finish());
+        return builder.create();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if (!mWiFi.hasIP()) {
+            mDialog.show();
+        }
         foreground = true;
         selectedPosition = -1;
     }
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements ServiceFinder.Ser
                 toRemove.add(service);
             }
         }
-        for (Service service : toRemove) {
+        for (Service service: toRemove) {
             services.remove(service);
         }
         listHashMap.put(type, services);
@@ -115,62 +115,20 @@ public class MainActivity extends AppCompatActivity implements ServiceFinder.Ser
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        IntentFilter intentFilter = new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION);
-        registerReceiver(wifiStateReceiver, intentFilter);
-        listHashMap.clear();
-        myAdapter.notifyDataSetChanged();
-        mFinder = new ServiceFinder(getApplicationContext());
-        mFinder.addServiceListener(this);
-        mFinder.discoverAll();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
     protected void onDestroy() {
-        try {
-            unregisterReceiver(wifiStateReceiver);
-            mFinder.removeServiceListener(this);
-            mFinder.cleanup();
-        } catch (Exception e) {
-
-        }
+        mFinder.removeServiceListener(this);
+        mFinder.cleanup();
         super.onDestroy();
-
     }
-
-    private BroadcastReceiver wifiStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int wifiStateExtra = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE,
-                    WifiManager.WIFI_STATE_UNKNOWN);
-
-            switch (wifiStateExtra) {
-                case WifiManager.WIFI_STATE_ENABLED:
-                    dialog.dismiss();
-                    progressDialog.show();
-                    progressDialog.setCancelable(false);
-                    break;
-                case WifiManager.WIFI_STATE_DISABLED:
-                    dialog.show();
-                    dialog.setCancelable(false);
-                    break;
-            }
-        }
-    };
 
     @Override
     public void onConnect(String ip) {
+        mDialog.dismiss();
     }
 
     @Override
     public void onDisconnect() {
-
+        mDialog.show();
     }
 
     @Override
