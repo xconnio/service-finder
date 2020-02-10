@@ -43,7 +43,6 @@ public class ServiceAdapter extends ArrayAdapter<Service> {
         Service mdatamodels = dataModels.get(position);
         viewHolder.hostname.setText(mdatamodels.getHostName());
         viewHolder.type.setText("deskcon " + mdatamodels.getHostIP());
-
         return convertView;
     }
 
