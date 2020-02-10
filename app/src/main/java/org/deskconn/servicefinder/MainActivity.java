@@ -84,7 +84,8 @@ public class MainActivity extends AppCompatActivity implements ServiceFinder.Ser
             myAdapter.notifyDataSetChanged();
         }
         if (selectedPosition != -1) {
-            ArrayList<Service> serviceArrayList = listHashMap.get(listHashMap.keySet().toArray()[selectedPosition]);
+            ArrayList<Service> serviceArrayList = listHashMap.get(
+                    listHashMap.keySet().toArray()[selectedPosition]);
             Intent intent1 = new Intent("com.update");
             intent1.putExtra("items", serviceArrayList);
             sendBroadcast(intent1);
@@ -101,13 +102,14 @@ public class MainActivity extends AppCompatActivity implements ServiceFinder.Ser
                 toRemove.add(service);
             }
         }
-        for (Service service: toRemove) {
+        for (Service service : toRemove) {
             services.remove(service);
         }
         listHashMap.put(type, services);
         myAdapter.notifyDataSetChanged();
         if (selectedPosition != -1) {
-            ArrayList<Service> serviceArrayList = listHashMap.get(listHashMap.keySet().toArray()[selectedPosition]);
+            ArrayList<Service> serviceArrayList = listHashMap.get(
+                    listHashMap.keySet().toArray()[selectedPosition]);
             Intent intent1 = new Intent("com.update");
             intent1.putExtra("items", serviceArrayList);
             sendBroadcast(intent1);
